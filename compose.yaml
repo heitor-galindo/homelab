@@ -1,0 +1,51 @@
+x-deploy-config: &default-deploy
+  resources:
+    reservations:
+      cpus: "1"
+      memory: 1gb
+    limits:
+      cpus: "2"
+      memory: 2gb
+
+x-networks-config: &default-network
+  networks:
+    - portainernetwork
+
+name: container-management
+services:
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    restart: always
+    ports:
+      - "9443:9443"
+      - "8000:8000"
+      - "9000:9000"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /run/user/1000/docker.sock:/var/run/docker.sock:ro
+      - portainer_data:/data
+    deploy: *default-deploy
+    <<: *default-network
+
+  portainer-agent:
+    image: portainer/agent:2.21.5
+    container_name: portainer_agent
+    restart: always
+    ports:
+      - "9001:9001"
+    volumes:
+      - /run/user/1000/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker:/var/lib/docker:ro
+      - /home/heitor/.local/share/docker/:/var/lib/docker:ro
+      - /:/host:ro
+    deploy: *default-deploy
+    <<: *default-network
+
+volumes:
+  portainer_data:
+
+networks:
+  portainernetwork:
+    driver: bridge
+    name: homelabnetwork
